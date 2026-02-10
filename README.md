@@ -1,4 +1,4 @@
-# S2MAM: Semi-supervised Meta Additive Model 
+# Semi-supervised Meta Additive Model 
 
 This repository is the official implementation for S2MAM based on Python language. 
 
