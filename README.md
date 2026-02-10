@@ -1,4 +1,4 @@
-# Semi-supervised Meta Additive Model for Robust Estimation and Variable Selection
+# S2MAM: Semi-supervised Meta Additive Model 
 
 This repository is the official implementation for S2MAM based on Python language. 
 
