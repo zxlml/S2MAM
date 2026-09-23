@@ -174,6 +174,8 @@ S2MAM/
 * Friedman 含交互项 `10·sin(πx₁x₂)`，可加下层模型只能部分表达该交互，因此端到端测试套件对 recall 使用放宽阈值（≥ 0.6）——得益于贪心交换精修，上表 seed 0 的运行仍恢复了全部 5 个信息维度。
 * 双月牙实验的每次上层评估都需重新拟合 LapSVM 下层，故 REINFORCE 引擎使用较小的迭代预算（`--max_outer_iter 40`）。
 
+> 完整实验复现汇总见 [`results/summary.csv`](results/summary.csv)（列含义说明见 [`results/summary_readme.txt`](results/summary_readme.txt)）。
+
 可解释性：拟合的逐特征样条分量能够恢复真实可加函数（如 `f¹(u)=−2sin(2u)`、`f⁶(u)=5u`），为决策机制提供分量级可解释性。
 
 ## ✅ 测试

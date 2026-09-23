@@ -176,6 +176,8 @@ Notes:
 * Friedman contains the interaction term `10·sin(πx₁x₂)`; an additive lower model can only partially express it, which is why the end-to-end test suite uses a relaxed recall threshold (≥ 0.6) — the seed-0 run above still recovers all five informative dims thanks to the greedy swap refinement.
 * The two-moons study uses the REINFORCE engine with a small iteration budget (`--max_outer_iter 40`), as each upper-level evaluation requires refitting the LapSVM lower model.
 
+> The complete reproduction summary is available at [`results/summary.csv`](results/summary.csv) (with a column dictionary in [`results/summary_readme.txt`](results/summary_readme.txt)).
+
 Interpretability: the fitted per-feature spline components recover the ground-truth additive functions (e.g., `f¹(u)=−2sin(2u)`, `f⁶(u)=5u`), providing component-wise interpretability of the decision mechanism.
 
 ## ✅ Tests
