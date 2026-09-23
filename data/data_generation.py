@@ -595,6 +595,7 @@ def generate_multi_classification(number=1000,dimension=100,ratio=0.15):
     valid_x, valid_y = [], []
     test_x,  test_y  = [], []
 
+
     for i in range(number):
         (trainX, trainY), (validX, validY), (testX, testY) = reg_data.generate_data()
         train_x.append(trainX)
@@ -605,3 +606,151 @@ def generate_multi_classification(number=1000,dimension=100,ratio=0.15):
         test_y.append(testY)
     train_loder,val_loder,testX =data_process(trainX, trainY, validX, validY,testX,batch=200,r=5)
     return train_loder,val_loder, testX, testY
+
+
+# =============================================================================
+#  论文（data.md）四个仿真数据集的忠实实现
+#  均支持：部分标注（n_labeled / labeled_per_class）、无信息维度 p_u、
+#  含噪声维度 p_n ~ N(100,100)、随机种子。
+# =============================================================================
+def _standardize(X, ref):
+    mean, std = ref.mean(axis=0), ref.std(axis=0)
+    std[std == 0] = 1.0
+    return (X - mean) / std
+
+
+def s2mam_additive_components(X):
+    """data.md (2) 的 8 个可加分量（X 取值范围 [-1,1]）。"""
+    from scipy.stats import norm as _norm
+    f1 = -2 * np.sin(2 * X[:, 0])
+    f2 = 8 * np.square(X[:, 1])
+    f3 = 7 * np.sin(X[:, 2]) / (2 - np.sin(X[:, 2]))
+    f4 = 6 * np.exp(-X[:, 3])
+    f5 = np.power(X[:, 4], 3) + 1.5 * np.square(X[:, 4] - 1)
+    f6 = 5 * X[:, 5]
+    f7 = 10 * np.sin(np.exp(-X[:, 6] / 2))
+    f8 = -10 * _norm.cdf(X[:, 7], loc=0.5, scale=0.8)
+    return f1 + f2 + f3 + f4 + f5 + f6 + f7 + f8
+
+
+def s2mam_regression_data(dataset='additive', N=200, Ntest=200, n_labeled=50,
+                          n_uninformative=None, n_noisy=10, noise_std=1.0,
+                          seed=0, standardize=True):
+    """论文回归仿真数据。
+
+    dataset='additive'：data.md (2)。p*=8 个可加信息维度（U(-1,1) 生成），
+        p_u=92 个 N(0,1) 无信息维度，p_n=10 个 N(100,100) 噪声维度，y=f*(X)+eps。
+    dataset='friedman'：data.md (1)。p*=5 个 Friedman 信息维度（U(0,1)），
+        p_u=95 个 N(0,1) 无信息维度，p_n=10 个 N(100,100) 噪声维度，
+        f(X)=10 sin(pi x1 x2)+20(x3-0.5)^2+10x4+5x5+eps，eps~N(0,1)。
+
+    返回 dict：Xl/Yl（部分标注训练集）、Xu（无标注）、Xt/Yt（测试集）、
+    informative_idx（信息维度索引）、n_noisy、p。
+    """
+    rng = np.random.RandomState(seed)
+    if dataset == 'additive':
+        p_star, p_u = 8, (92 if n_uninformative is None else n_uninformative)
+        X = rng.uniform(-1, 1, size=(N, p_star))
+        Xt = rng.uniform(-1, 1, size=(Ntest, p_star))
+        Y, Yt = s2mam_additive_components(X), s2mam_additive_components(Xt)
+        eps = rng.normal(0, noise_std, size=N)
+        Y = Y + eps
+    elif dataset == 'friedman':
+        p_star, p_u = 5, (95 if n_uninformative is None else n_uninformative)
+        from sklearn.datasets import make_friedman1
+        X, Y = make_friedman1(n_samples=N, n_features=p_star, noise=noise_std,
+                              random_state=seed)
+        Xt, Yt = make_friedman1(n_samples=Ntest, n_features=p_star,
+                                noise=noise_std, random_state=seed + 1)
+        Y, Yt = np.asarray(Y, float), np.asarray(Yt, float)
+    else:
+        raise ValueError(f'unknown dataset {dataset}')
+
+    # 无信息维度 N(0,1) 与噪声维度 N(100,100)
+    Xu_ = rng.normal(0, 1, size=(N, p_u))
+    Xtu_ = rng.normal(0, 1, size=(Ntest, p_u))
+    Xn = rng.normal(100, 100, size=(N, n_noisy))
+    Xtn = rng.normal(100, 100, size=(Ntest, n_noisy))
+    X = np.hstack([X, Xu_, Xn])
+    Xt = np.hstack([Xt, Xtu_, Xtn])
+
+    if standardize:
+        ref = np.vstack([X, Xt])
+        X, Xt = _standardize(X, ref), _standardize(Xt, ref)
+
+    informative_idx = np.arange(p_star)
+
+    # 部分标注：随机抽取 n_labeled 个有标注样本
+    labeled = rng.choice(N, size=min(n_labeled, N), replace=False)
+    unlabeled = np.setdiff1d(np.arange(N), labeled)
+    Yt = np.asarray(Yt, float).reshape(-1)
+    return {'Xl': X[labeled], 'Yl': Y[labeled],
+            'Xu': X[unlabeled], 'Xt': Xt, 'Yt': Yt,
+            'informative_idx': informative_idx, 'n_noisy': n_noisy,
+            'p': X.shape[1], 'seed': seed}
+
+
+def s2mam_classification_data(dataset='additive', N=200, Ntest=200,
+                              labeled_per_class=10, n_uninformative=None,
+                              n_noisy=10, noise=0.05, seed=0,
+                              standardize=True):
+    """论文分类仿真数据（标签映射到 ±1）。
+
+    dataset='additive'：data.md (3)。p*=2，f(x)=(x1-0.5)^2+(x2-0.5)^2-0.08，
+        x_j=(W_ij+U_i)/2，p_u=98 个 N(0,1) 无信息维度，p_n=10 个 N(100,100)
+        噪声维度，y=1 若 f>0 否则 -1。
+    dataset='moon'：data.md (4)。make_moons 双月牙，拼接无信息与噪声维度。
+
+    部分标注：每类抽取 labeled_per_class 个有标注样本。
+    """
+    rng = np.random.RandomState(seed)
+    if dataset == 'additive':
+        p_star, p_u = 2, (98 if n_uninformative is None else n_uninformative)
+        W = rng.uniform(0, 1, size=(N, p_star))
+        U = rng.uniform(0, 1, size=(N, 1))
+        Xs = (W + U) / 2
+        Wt = rng.uniform(0, 1, size=(Ntest, p_star))
+        Ut = rng.uniform(0, 1, size=(Ntest, 1))
+        Xts = (Wt + Ut) / 2
+
+        def _label(Xa):
+            f = np.square(Xa[:, 0] - 0.5) + np.square(Xa[:, 1] - 0.5) - 0.08
+            return np.where(f > 0, 1, -1).astype(float)
+
+        Y, Yt = _label(Xs), _label(Xts)
+        base_X, base_Xt = Xs, Xts
+    elif dataset == 'moon':
+        from sklearn.datasets import make_moons
+        Xs, Y0 = make_moons(n_samples=N, noise=noise, random_state=seed)
+        Xts, Yt0 = make_moons(n_samples=Ntest, noise=noise, random_state=seed + 1)
+        Y = np.where(Y0 > 0, 1.0, -1.0)
+        Yt = np.where(Yt0 > 0, 1.0, -1.0)
+        p_star, p_u = 2, (8 if n_uninformative is None else n_uninformative)
+        base_X, base_Xt = Xs, Xts
+    else:
+        raise ValueError(f'unknown dataset {dataset}')
+
+    Xu_ = rng.normal(0, 1, size=(N, p_u))
+    Xtu_ = rng.normal(0, 1, size=(Ntest, p_u))
+    Xn = rng.normal(100, 100, size=(N, n_noisy))
+    Xtn = rng.normal(100, 100, size=(Ntest, n_noisy))
+    X = np.hstack([base_X, Xu_, Xn])
+    Xt = np.hstack([base_Xt, Xtu_, Xtn])
+
+    if standardize:
+        ref = np.vstack([X, Xt])
+        X, Xt = _standardize(X, ref), _standardize(Xt, ref)
+
+    informative_idx = np.arange(p_star)
+
+    # 部分标注：每类 labeled_per_class 个
+    idx_pos = np.nonzero(Y == 1)[0]
+    idx_neg = np.nonzero(Y == -1)[0]
+    l_pos = rng.choice(idx_pos, size=min(labeled_per_class, len(idx_pos)), replace=False)
+    l_neg = rng.choice(idx_neg, size=min(labeled_per_class, len(idx_neg)), replace=False)
+    labeled = np.concatenate([l_pos, l_neg])
+    unlabeled = np.setdiff1d(np.arange(N), labeled)
+    return {'Xl': X[labeled], 'Yl': Y[labeled],
+            'Xu': X[unlabeled], 'Xt': Xt, 'Yt': Yt,
+            'informative_idx': informative_idx, 'n_noisy': n_noisy,
+            'p': X.shape[1], 'seed': seed}
