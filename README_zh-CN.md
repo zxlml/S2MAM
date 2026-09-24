@@ -1,10 +1,10 @@
 <div align="center">
 
-# S2MAM：半监督元可加模型
+# S2MAM: Semi-supervised Meta Additive Model for Robust Estimation and Variable Selection
 
 **基于精确隐式超梯度的双层优化特征选择（部分标注场景）**
 
-[![English](https://img.shields.io/badge/Language-English-blue?style=for-the-badge)](README.md) [![简体中文](https://img.shields.io/badge/Language-简体中文-red?style=for-the-badge)](README_zh-CN.md)
+[![Paper](https://img.shields.io/badge/Paper-arXiv%3A2604.19072-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2604.19072) [![English](https://img.shields.io/badge/Language-English-blue?style=for-the-badge)](README.md) [![简体中文](https://img.shields.io/badge/Language-简体中文-red?style=for-the-badge)](README_zh-CN.md)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
@@ -188,11 +188,14 @@ REINFORCE 风格的上层机制借鉴自 [Probabilistic Bilevel Coreset Selectio
 如果 S2MAM 对您的研究有帮助，请引用：
 
 ```bibtex
-@misc{s2mam,
-  title  = {S2MAM: Semi-supervised Meta Additive Models via Bilevel Feature Selection},
-  author = {S2MAM Authors},
-  year   = {2026},
-  url    = {https://github.com/zxlml/S2MAM}
+@misc{zhang2026s2mamsemisupervisedmetaadditive,
+      title={S2MAM: Semi-supervised Meta Additive Model for Robust Estimation and Variable Selection},
+      author={Xuelin Zhang and Hong Chen and Yingjie Wang and Tieliang Gong and Bin Gu},
+      year={2026},
+      eprint={2604.19072},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2604.19072},
 }
 ```
 
