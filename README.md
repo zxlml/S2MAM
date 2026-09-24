@@ -162,23 +162,7 @@ Equivalent CLI flags: `--task --dataset --engine --k --max_outer_iter --outer_lr
 
 ## 📁 Experimental Results
 
-### Paper-protocol comparison (verified against the paper)
-
-Following the exact protocol of Table 2 in the paper (arXiv 2604.19072v3): synthetic additive classification `f*(x)=(x¹−0.5)²+(x²−0.5)²−0.08`, 200 samples, 5% labeled, corruptions `p_u ~ N(0,1)` and `p_n ~ N(100,100)`. Our reproduction (seeds 0–2) matches the paper's reported Test accuracy **within one standard deviation** in all three corrupted settings, and S2MAM recovers exactly the informative pair `{0,1}` in every run:
-
-| Corruption layout | Paper (100 reps) | Ours (3 seeds) | Diff |
-| --- | --- | --- | --- |
-| `p_u=10, p_n=0` | 86.015 ± 3.575 | 82.500 ± 2.858 | −3.5 |
-| `p_u=0, p_n=10` | 81.855 ± 4.055 | 82.500 ± 2.858 | +0.6 |
-| `p_u=10, p_n=10` | 80.112 ± 4.370 | 82.667 ± 5.390 | +2.6 |
-
-Notes: the clean setting (`p_u=p_n=0`, paper: 90.309±3.409, ours: 82.833±4.589) is **not** listed above as it falls outside one standard deviation; the paper's quantitative tables for the synthetic regression and moon studies are in its (non-public) supplementary material and therefore cannot be verified here. The machine-readable summary with the exclusion rationale is in [`results/summary.csv`](results/summary.csv) / [`results/summary_readme.txt`](results/summary_readme.txt).
-
-### Repository-protocol results (vs. oracle baselines)
-
-With the repository's heavier-corruption layout (92–98 redundant dims, 10 noisy dims, 25% labeled regression / 10 labels per class) and seed 0, S2MAM selects exactly the informative feature set (recall = precision = 1.00) and reaches oracle-level test performance on the four synthetic studies: additive regression MSE **0.596** (= oracle; full-feature 50.33), Friedman MSE **3.645** (= oracle; full-feature 26.91), additive classification ACC **88.50%** (= oracle), two-moons ACC **96.00%** (= oracle, LapSVM lower + REINFORCE engine with `--max_outer_iter 40`). These numbers use our own oracle/full-feature baselines and are not directly comparable to the paper's tables.
-
-Interpretability: the fitted per-feature spline components recover the ground-truth additive functions (e.g., `f¹(u)=−2sin(2u)`, `f⁶(u)=5u`), providing component-wise interpretability of the decision mechanism.
+Experiment outputs are not listed in this README. The machine-readable reproduction summary is available at [`results/summary.csv`](results/summary.csv), with the column dictionary and scope notes in [`results/summary_readme.txt`](results/summary_readme.txt). Reproduce with the commands in [Quick Start](#-quick-start) or `python paper_compare.py`.
 
 ## ✅ Tests
 
