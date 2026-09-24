@@ -80,6 +80,7 @@ class ExperimentConfig:
     n_labeled: int = 50               # 部分标注（分类按 labeled_per_class）
     labeled_per_class: int = 10
     n_noisy: int = 10                 # N(100,100) 噪声维度数
+    n_uninformative: int = -1        # N(0,1) 无信息维度数（-1 用数据集默认值）
     noise_std: float = 1.0
     seed: int = 0
     # 下层模型
@@ -160,7 +161,9 @@ def run_experiment(cfg: ExperimentConfig) -> dict:
         data = s2mam_classification_data(dataset=cfg.dataset, N=cfg.N,
                                          Ntest=cfg.Ntest,
                                          labeled_per_class=cfg.labeled_per_class,
-                                         n_noisy=cfg.n_noisy, seed=cfg.seed)
+                                         n_noisy=cfg.n_noisy,
+                                         n_uninformative=(None if cfg.n_uninformative < 0 else cfg.n_uninformative),
+                                         seed=cfg.seed)
         p_star = len(data['informative_idx'])
         k = cfg.k if cfg.k > 0 else p_star
 

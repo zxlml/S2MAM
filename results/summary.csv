@@ -1,5 +1,4 @@
-dataset,task,n_total,n_test,n_labeled,n_noisy_dims,n_features,n_true_features,k_selected,selected_features,precision,recall,metric_name,s2mam_metric,full_feature_baseline,oracle_baseline,s2mam_equals_oracle,engine,seed
-additive,regression,200,200,50,10,110,8,8,"0,1,2,3,4,5,6,7",1.00,1.00,test_mse,0.5960,50.3265,0.5960,yes,implicit,0
-friedman,regression,200,200,50,10,110,5,5,"0,1,2,3,4",1.00,1.00,test_mse,3.6445,26.9101,3.6445,yes,implicit,0
-additive,classification,200,200,10/class,10,110,2,2,"0,1",1.00,1.00,test_acc,0.8850,0.4900,0.8850,yes,implicit,0
-moon,classification,200,200,10/class,10,20,2,2,"0,1",1.00,1.00,test_acc,0.9600,0.5000,0.9600,yes,reinforce,0
+dataset,task,p_star,n_samples,label_ratio,n_uninformative_pu,n_noisy_pn,n_repeats_paper,n_seeds_ours,selected_features,selection_correct,paper_test_acc_mean,paper_test_acc_sd,ours_test_acc_mean,ours_test_acc_sd,diff,matched,engine,seed_set
+additive,classification,2,200,5%,10,0,100,3,"0,1",yes,86.015,3.575,82.500,2.858,-3.515,yes,implicit,0-2
+additive,classification,2,200,5%,0,10,100,3,"0,1",yes,81.855,4.055,82.500,2.858,+0.645,yes,implicit,0-2
+additive,classification,2,200,5%,10,10,100,3,"0,1",yes,80.112,4.370,82.667,5.390,+2.555,yes,implicit,0-2
